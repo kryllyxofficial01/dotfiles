@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+conversion_factor=1024
+
 get_active_interface() {
     ip route get 1.1.1.1 | awk '{for(i=1;i<=NF;i++) if ($i=="dev") print $(i+1); exit}'
 }
@@ -16,10 +18,33 @@ get_speed() {
     rx_bytesb=$(< /sys/class/net/"$iface"/statistics/rx_bytes)
     tx_bytesb=$(< /sys/class/net/"$iface"/statistics/tx_bytes)
 
-    local rx_rate=$(( (rx_bytesb - rx_bytesa) / 1024 ))  # KB/s
-    local tx_rate=$(( (tx_bytesb - tx_bytesa) / 1024 ))  # KB/s
+    local rx_rate=$(( rx_bytesb - rx_bytesa )) # bytes/s
+    local tx_rate=$(( tx_bytesb - tx_bytesa )) # bytes/s
 
-    echo "%{F#f0c674}DOWN%{F-} ${rx_rate} KB/s %{F#f0c674}UP%{F-} ${tx_rate} KB/s"
+    local rx_rate_unit="bytes/s"
+    local tx_rate_unit="bytes/s"
+
+    if (( rx_rate > conversion_factor )); then
+        (( rx_rate /= conversion_factor ))
+        rx_rate_unit="kb/s"
+    fi
+
+    if (( rx_rate > conversion_factor )); then
+        (( rx_rate /= conversion_factor ))
+        rx_rate_unit="mb/s"
+    fi
+
+    if (( tx_rate > conversion_factor )); then
+        (( tx_rate /= conversion_factor ))
+        tx_rate_unit="kb/s"
+    fi
+
+    if (( tx_rate > conversion_factor )); then
+        (( tx_rate /= conversion_factor ))
+        tx_rate_unit="mb/s"
+    fi
+
+    echo "%{F#f0c674}DOWN%{F-} ${rx_rate} ${rx_rate_unit} %{F#f0c674}UP%{F-} ${tx_rate} ${tx_rate_unit}"
 }
 
 main() {
