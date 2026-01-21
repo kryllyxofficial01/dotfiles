@@ -62,6 +62,10 @@ require("lazy").setup({
                             quit_on_open = false,
                         },
                     },
+
+                    view = {
+                        adaptive_size = true,
+                    }
                 }
 
                 require("nvim-treesitter.configs").setup({
@@ -126,13 +130,18 @@ require("lazy").setup({
                         { name = "buffer" },
                     }),
                     completion = {
-                        autocomplete = { cmp.TriggerEvent.TextChanged }, -- ✅ this makes it show while typing
+                        autocomplete = { cmp.TriggerEvent.TextChanged },
                     },
                 })
             end,
         },
         { "williamboman/mason.nvim", config = true },
         { "williamboman/mason-lspconfig.nvim" },
+        {
+            'vyfor/cord.nvim',
+            build = ':Cord update',
+        },
+        { 'wakatime/vim-wakatime', lazy = false }
     },
     -- Configure any other settings here. See the documentation for more details.
     -- colorscheme that will be used when installing plugins.
@@ -142,19 +151,69 @@ require("lazy").setup({
 })
 
 -- LSP setup
-local lspconfig = require("lspconfig")
 local cmp_nvim_lsp = require("cmp_nvim_lsp")
 
 -- Attach capabilities for nvim-cmp
 local capabilities = cmp_nvim_lsp.default_capabilities()
 
 -- Setup clangd (Mason-installed)
-lspconfig.clangd.setup({
+vim.lsp.config("clangd", {
     capabilities = capabilities,
     cmd = { vim.fn.stdpath("data") .. "/mason/bin/clangd" },
     filetypes = { "c", "cpp", "objc", "objcpp" },
-    root_dir = lspconfig.util.root_pattern("compile_commands.json", "compile_flags.txt", ".git"),
+    root_dir = vim.fs.root(0, { "compile_commands.json", "compile_flags.txt", ".git", "Makefile" }),
 })
+
+vim.lsp.config("asm_lsp", {
+    capabilities = capabilities,
+    cmd = { vim.fn.stdpath("data") .. "/mason/bin/asm-lsp" },
+    filetypes = { "asm", "s", "S" },
+    root_dir = vim.fs.root(0, { ".git", "Makefile" }),
+})
+
+vim.lsp.config("lua_ls", {
+  capabilities = capabilities,
+  cmd = { vim.fn.stdpath("data") .. "/mason/bin/lua-language-server" },
+  filetypes = { "lua" },
+  root_dir = vim.fs.root(0, { ".git" }),
+  settings = {
+    Lua = {
+      runtime = { version = "LuaJIT" },
+      diagnostics = { globals = { "vim" } },
+      workspace = {
+        checkThirdParty = false,
+        library = {
+          vim.env.VIMRUNTIME,
+        },
+      },
+    },
+  },
+})
+
+vim.lsp.config("ts_ls", {
+    capabilities = capabilities,
+    cmd = { vim.fn.stdpath("data") .. "/mason/bin/typescript-language-server", "--stdio" },
+    filetypes = {
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    },
+    root_dir = vim.fs.root(0, {
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json",
+        ".git",
+        "info.txt"
+    })
+})
+
+require("c-headers")
+
+vim.lsp.enable("clangd")
+vim.lsp.enable("asm_lsp")
+vim.lsp.enable("lua_ls")
+vim.lsp.enable("ts_ls")
 
 vim.opt.wrap = false
 vim.opt.number = true
