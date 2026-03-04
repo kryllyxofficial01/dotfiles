@@ -141,7 +141,29 @@ require("lazy").setup({
             'vyfor/cord.nvim',
             build = ':Cord update',
         },
-        { 'wakatime/vim-wakatime', lazy = false }
+        { 'wakatime/vim-wakatime', lazy = false },
+        {
+            "lervag/vimtex",
+            ft = { "tex" },
+            lazy = false,     -- we don't want to lazy load VimTeX
+            init = function()
+                vim.g.vimtex_view_method = "zathura"
+
+                vim.g.vimtex_compiler_method = "latexmk"
+                vim.g.vimtex_compiler_latexmk = {
+                    callback = 1,
+                    continuous = 1,
+                    executable = "latexmk",
+                    options = {
+                        "-pdf",
+                        "-interaction=nonstopmode",
+                        -- "-synctex=1",
+                        "-outdir=.",
+                        "-auxdir=./build",
+                    }
+                }
+            end
+        },
     },
     -- Configure any other settings here. See the documentation for more details.
     -- colorscheme that will be used when installing plugins.
@@ -172,22 +194,22 @@ vim.lsp.config("asm_lsp", {
 })
 
 vim.lsp.config("lua_ls", {
-  capabilities = capabilities,
-  cmd = { vim.fn.stdpath("data") .. "/mason/bin/lua-language-server" },
-  filetypes = { "lua" },
-  root_dir = vim.fs.root(0, { ".git" }),
-  settings = {
-    Lua = {
-      runtime = { version = "LuaJIT" },
-      diagnostics = { globals = { "vim" } },
-      workspace = {
-        checkThirdParty = false,
-        library = {
-          vim.env.VIMRUNTIME,
+    capabilities = capabilities,
+    cmd = { vim.fn.stdpath("data") .. "/mason/bin/lua-language-server" },
+    filetypes = { "lua" },
+    root_dir = vim.fs.root(0, { ".git" }),
+    settings = {
+        Lua = {
+            runtime = { version = "LuaJIT" },
+            diagnostics = { globals = { "vim" } },
+            workspace = {
+                checkThirdParty = false,
+                library = {
+                    vim.env.VIMRUNTIME,
+                },
+            },
         },
-      },
     },
-  },
 })
 
 vim.lsp.config("ts_ls", {
@@ -208,12 +230,39 @@ vim.lsp.config("ts_ls", {
     })
 })
 
+vim.lsp.config("pyright", {
+    capabilities = capabilities,
+    cmd = { vim.fn.stdpath("data") .. "/mason/bin/pyright-langserver", "--stdio" },
+    filetypes = { "python" },
+    root_dir = vim.fs.root(0, {
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "requirements.txt",
+        "Pipfile",
+        ".git"
+    })
+})
+
+vim.lsp.config("texlab", {
+    capabilities = capabilities,
+    cmd = { vim.fn.stdpath("data") .. "/mason/bin/texlab" },
+    filetypes = { "tex", "bib" },
+    root_dir = vim.fs.root(0, {
+        ".latexmkrc",
+        ".texmf.cnf",
+        ".git"
+    })
+})
+
 require("c-headers")
 
 vim.lsp.enable("clangd")
 vim.lsp.enable("asm_lsp")
 vim.lsp.enable("lua_ls")
 vim.lsp.enable("ts_ls")
+vim.lsp.enable("pyright")
+vim.lsp.enable("texlab")
 
 vim.opt.wrap = false
 vim.opt.number = true
