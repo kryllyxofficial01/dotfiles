@@ -18,30 +18,30 @@ get_speed() {
     rx_bytesb=$(< /sys/class/net/"$iface"/statistics/rx_bytes)
     tx_bytesb=$(< /sys/class/net/"$iface"/statistics/tx_bytes)
 
-    local rx_rate=$(( rx_bytesb - rx_bytesa )) # bytes/s
-    local tx_rate=$(( tx_bytesb - tx_bytesa )) # bytes/s
+    local rx_rate=$(( (rx_bytesb - rx_bytesa) * 8 )) # bits/s
+    local tx_rate=$(( (tx_bytesb - tx_bytesa) * 8 )) # bits/s
 
-    local rx_rate_unit="bytes/s"
-    local tx_rate_unit="bytes/s"
+    local rx_rate_unit="bps"
+    local tx_rate_unit="bps"
 
     if (( rx_rate > conversion_factor )); then
         (( rx_rate /= conversion_factor ))
-        rx_rate_unit="kb/s"
+        rx_rate_unit="kbps"
     fi
 
     if (( rx_rate > conversion_factor )); then
         (( rx_rate /= conversion_factor ))
-        rx_rate_unit="mb/s"
+        rx_rate_unit="mbps"
     fi
 
     if (( tx_rate > conversion_factor )); then
         (( tx_rate /= conversion_factor ))
-        tx_rate_unit="kb/s"
+        tx_rate_unit="kbps"
     fi
 
     if (( tx_rate > conversion_factor )); then
         (( tx_rate /= conversion_factor ))
-        tx_rate_unit="mb/s"
+        tx_rate_unit="mbps"
     fi
 
     echo "%{F#f0c674}DOWN%{F-} ${rx_rate} ${rx_rate_unit} %{F#f0c674}UP%{F-} ${tx_rate} ${tx_rate_unit}"
